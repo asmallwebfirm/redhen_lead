@@ -1,0 +1,107 @@
+<?php
+
+/**
+ * @file
+ * Hooks and functions for the Redhen Lead Generation module.
+ */
+
+
+/**
+ * Include Redhen lead generation form CRUD operations and main block callbacks.
+ */
+require_once(dirname(__FILE__) . '/includes/redhen_lg.crud.inc');
+require_once(dirname(__FILE__) . '/includes/redhen_lg.blocks.inc');
+
+
+/**
+ * Implements hook_menu().
+ */
+function redhen_lg_menu() {
+  $items['admin/structure/block/manage/redhen_lg/%/configure'] = array(
+    'title' => 'Configure block',
+    'page callback' => 'redhen_lg_block_configure_goto',
+    'page arguments' => array(5),
+    'access arguments' => array('administer redhen lg forms'),
+    'file' => 'includes/redhen_lg.pages.inc',
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function redhen_lg_permission() {
+  // Administer gumroad types.
+  $permissions['administer redhen lg forms'] = array(
+    'title' => t('Administer Redhen lead generation forms'),
+    'description' => t('Allows users to configure and import Redhen lead generation forms'),
+    'restrict access' => TRUE,
+  );
+
+  return $permissions;
+}
+
+
+/**
+ * Implements hook_entity_info().
+ */
+function redhen_lg_entity_info() {
+  $entities['redhen_lg_form'] = array(
+    'label' => t('Redhen Lead Gen form'),
+    'entity class' => 'RedhenLGForm',
+    'controller class' => 'RedhenLGFormController',
+    'base table' => 'redhen_lg_form',
+    'fieldable' => FALSE,
+    'exportable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'name' => 'name',
+      'label' => 'label',
+    ),
+    'module' => 'redhen_lg',
+    // Enable the entity API's admin UI.
+    'admin ui' => array(
+      'path' => 'admin/config/redhen/lead-gen',
+      'file' => 'includes/redhen_lg.forms.inc',
+      'controller class' => 'RedhenLGFormUIController',
+    ),
+    'access callback' => 'redhen_lg_form_access',
+  );
+
+  return $entities;
+}
+
+
+/**
+ * Access callback for Redhen Lead Gen forms.
+ */
+function redhen_lg_form_access($op, $entity = NULL) {
+  return user_access('administer redhen lg forms');
+}
+
+
+/**
+ * Implements hook_block_info().
+ */
+function redhen_lg_block_info() {
+  $blocks = array();
+
+  foreach (redhen_lg_forms() as $name => $lg_form) {
+    $blocks[$name] = array(
+      'info' => 'RedHen LG: ' . entity_label('redhen_lg_form', $lg_form),
+      'cache' => DRUPAL_NO_CACHE,
+    );
+  }
+
+  return $blocks;
+}
+
+
+/**
+ * Implements hook_block_view().
+ */
+function redhen_lg_block_view($delta = '') {
+  return redhen_lg_get_block($delta); 
+}
