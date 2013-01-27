@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Hooks and functions for the RedHen Lead module.
+ */
+
+
+/**
+ * Returns a Redhen Contact based on an e-mail address if one exists.
+ *
+ * @param $email
+ *   The e-mail address associated with the contact.
+ *
+ * @return
+ *   A Redhen Contact if one exists; FALSE otherwise.
+ */
+function redhen_lead_load_contact_by_email($email) {
+  $emails = &drupal_static(__FUNCTION__);
+
+  if (!isset($emails[$email])) {
+    $result = db_query('SELECT entity_id FROM field_data_redhen_contact_email WHERE redhen_contact_email_value = :email', array(':email' => $email));
+    $entity_id = $result->fetchAllKeyed(0, 0);
+
+    if (!empty($entity_id)) {
+      $emails[$email] = redhen_contact_load(key($entity_id));
+    }
+    else {
+      $emails[$email] = FALSE;
+    }
+  }
+
+  return $emails[$email];
+}

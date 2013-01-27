@@ -7,15 +7,15 @@
 
 
 /**
- * Redhen Lead Generation form class.
+ * Redhen Lead Form class.
  */
-class RedhenLGForm extends Entity {
+class RedhenLeadForm extends Entity {
   public $name;
   public $label;
   public $weight = 0;
 
   public function __construct($values = array()) {
-    parent::__construct($values, 'redhen_lg_form');
+    parent::__construct($values, 'redhen_lead_form');
   }
 
   function isLocked() {
@@ -25,9 +25,9 @@ class RedhenLGForm extends Entity {
 
 
 /**
- * Controller for Redhen Lead Generation forms.
+ * Controller for Redhen Lead Forms.
  */
-class RedhenLGFormController extends EntityAPIControllerExportable {
+class RedhenLeadFormController extends EntityAPIControllerExportable {
    public function create(array $values = array()) {
     $values += array(
       'label' => '',
@@ -36,19 +36,19 @@ class RedhenLGFormController extends EntityAPIControllerExportable {
   }
 
   /**
-   * Save Redhen Lead Gen form.
+   * Save Redhen Lead form.
    */
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     parent::save($entity, $transaction);
 
     // Load necessary incs.
-    module_load_include('inc', 'redhen_lg', 'includes/redhen_lg.forms');
+    module_load_include('inc', 'redhen_lead_form', 'includes/redhen_lead_form.forms');
     module_load_include('inc', 'block', 'block.admin');
 
     // Build a list of submit handlers that need to be called.
     $fake_form = array('#submit' => array());
-    $fake_form_state = array('values' => array('module' => 'redhen_lg', 'delta' => $entity->name));
-    $fake_form = block_admin_configure($fake_form, $fake_form_state, 'redhen_lg', $entity->name);
+    $fake_form_state = array('values' => array('module' => 'redhen_lead_form', 'delta' => $entity->name));
+    $fake_form = block_admin_configure($fake_form, $fake_form_state, 'redhen_lead_form', $entity->name);
     $fake_hooks = array('form', 'form_block_add_block_form');
     $fake_formid = 'block_admin_configure';
     drupal_alter($fake_hooks, $fake_form, $fake_form_state, $fake_formid);
@@ -59,11 +59,11 @@ class RedhenLGFormController extends EntityAPIControllerExportable {
     $fake_form = array();
     $fake_form_state = array(
       'values' => array(
-        'module' => 'redhen_lg',
+        'module' => 'redhen_lead_form',
         'delta' => $entity->name,
       ),
     );
-    _redhen_lg_set_block_config_form_state($fake_form_state, $entity->settings['block_config']);
+    _redhen_lead_form_set_block_config_form_state($fake_form_state, $entity->settings['block_config']);
 
     // Loop through all submit handlers.
     foreach ($submit_handlers as $handler) {
@@ -75,27 +75,39 @@ class RedhenLGFormController extends EntityAPIControllerExportable {
   }
 
   /**
-   * Delete redhen Lead Gen form.
+   * Delete RedHen Lead Form.
    */
   public function delete($ids, DatabaseTransaction $transaction = NULL) {
+    $deltas = array();
+    foreach ($ids as $id) {
+      $lead_form = redhen_lead_form_load($id);
+      $deltas[] = $lead_form->name;
+    }
+
+    // Manually delete the block entries.
+    db_delete('block')
+      ->condition('delta', $deltas, 'IN')
+      ->condition('module', 'redhen_lead_form')
+      ->execute();
+
     parent::delete($ids, $transaction);
 
-    // This also requires a block rehash.
+    // We'll need to rehash blocks. There's no better indirect way to call this.
     block_flush_caches();
   }
 }
 
 /**
- * UI controller for Redhen Lead Generation forms.
+ * UI controller for Redhen Lead Forms.
  */
-class RedhenLGFormUIController extends EntityDefaultUIController {
+class RedhenLeadFormUIController extends EntityDefaultUIController {
   /**
    * Overrides hook_menu() defaults.
    */
   public function hook_menu() {
     $items = parent::hook_menu();
-    $items[$this->path]['title'] = 'RedHen Lead Gen settings';
-    $items[$this->path]['description'] = 'Manage Redhen Lead Gen forms.';
+    $items[$this->path]['title'] = 'Lead forms';
+    $items[$this->path]['description'] = 'Manage lead forms';
     return $items;
   }
 }

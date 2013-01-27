@@ -1,0 +1,9 @@
+name = Redhen Lead
+description = Defines the base Lead entity and features.
+package = Redhen
+core = "7.x"
+
+dependencies[] = redhen
+dependencies[] = entity
+
+#files[] = includes/redhen_lead.entity.inc

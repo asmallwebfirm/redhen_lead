@@ -1,0 +1,11 @@
+name = Redhen Lead Form
+description = Add and configure block forms to capture Redhen Leads.
+package = Redhen
+core = "7.x"
+
+dependencies[] = redhen
+dependencies[] = redhen_contact
+dependencies[] = redhen_lead
+dependencies[] = entity
+
+files[] = includes/redhen_lead_form.entity.inc
