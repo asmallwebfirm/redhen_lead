@@ -7,6 +7,92 @@
 
 
 /**
+ * Include Redhen lead CRUD operations.
+ */
+require_once(dirname(__FILE__) . '/includes/redhen_lead.crud.inc');
+
+
+/**
+ * Implements hook_entity_info().
+ */
+function redhen_lead_entity_info() {
+  return array(
+    'redhen_lead' => array(
+      'label' => t('Lead'),
+      'plural label' => t('Leads'),
+      'controller class' => 'EntityAPIController',
+      'metadata controller class' => 'RedhenLeadMetadataController',
+      'entity class' => 'RedhenLead',
+      'base table' => 'redhen_lead',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'lead_id',
+      ),
+      'bundle keys' => array(
+        'bundle' => 'name',
+      ),
+      'bundles' => array(
+        'redhen_lead' => array(
+          'label' => 'Leads',
+          'admin' => array(
+            'path' => 'admin/structure/redhen/leads',
+            'access arguments' => array('administer redhen leads'),
+          ),
+        ),
+      ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Full lead'),
+          'custom settings' => FALSE,
+        ),
+      ),
+      'uri callback' => 'entity_class_uri',
+      'token type' => 'redhen_lead',
+      'module' => 'redhen_lead',
+      'label callback' => 'entity_class_label'
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function redhen_lead_menu() {
+  $items['admin/structure/redhen/leads'] = array(
+    'title' => 'Leads',
+    'description' => 'Manage RedHen leads',
+    'page callback' => 'redhen_lead_admin_page',
+    'file' => 'includes/redhen_lead.pages.inc',
+    'access arguments' => array('administer redhen leads'),
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function redhen_lead_permission() {
+  return array(
+    'administer redhen leads' => array(
+      'title' => t('Administer RedHen Leads'),
+      'description' => t('Perform administration tasks and manage the structure of RedHen Leads.'),
+    ),
+    'manage redhen leads' => array(
+      'title' => t('Manage RedHen Leads'),
+      'description' => t('Create, update or delete RedHen Leads.'),
+    ),
+    'access redhen leads' => array(
+      'title' => t('Access Redhen Leads'),
+      'description' => t('View RedHen Leads.'),
+    ),
+  );
+}
+
+
+/**
  * Returns a Redhen Contact based on an e-mail address if one exists.
  *
  * @param $email

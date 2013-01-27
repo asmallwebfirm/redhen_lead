@@ -4,6 +4,7 @@ package = Redhen
 core = "7.x"
 
 dependencies[] = redhen
+dependencies[] = reden_contact
 dependencies[] = entity
 
-#files[] = includes/redhen_lead.entity.inc
+files[] = includes/redhen_lead.entity.inc
