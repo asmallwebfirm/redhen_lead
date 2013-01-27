@@ -47,7 +47,14 @@ function redhen_lead_form_get_block($delta = '') {
  * Form callback for the main lead form block form.
  */
 function redhen_lead_form_block_form($form, &$form_state, $lead_form) {
+  // Either create new contact or pull it from the session if so configured.
   $contact = redhen_lead_form_default_contact($lead_form->settings['contact']['contact_type']);
+
+  // Create a new lead; if we're on an entity, use it to fill in lead values.
+  $entity = redhen_lead_form_menu_get_item();
+  $type = redhen_lead_form_menu_get_item_type();
+  $lead_options = $type ? array('entity_id' => entity_id($type, $entity), 'entity_type' => $type) : array();
+  $lead = redhen_lead_create($lead_options);
 
   // Only display field values if the contact is new.
   if (isset($contact->is_new) && $contact->is_new) {
@@ -73,10 +80,7 @@ function redhen_lead_form_block_form($form, &$form_state, $lead_form) {
       '#size' => 15,
     );
 
-    // Save the contact to the form state.
-    $form_state['redhen_contact'] = $contact;
-
-    // Attach fields.
+    // Attach and save the contact to the form/state.
     field_attach_form('redhen_contact', $contact, $form, $form_state);
 
     // Remove RedHen contact email field and add our own, simple field.
@@ -91,6 +95,13 @@ function redhen_lead_form_block_form($form, &$form_state, $lead_form) {
       '#size' => 15,
     );
   }
+
+  // Attach the contact to the form state.
+  $form_state['redhen_contact'] = $contact;
+
+  // Attach and save the lead to the form/state.
+  $form_state['redhen_lead'] = $lead;
+  field_attach_form('redhen_lead', $lead, $form, $form_state);
 
   // Provide the submit/CTA.
   $form['actions'] = array(
@@ -110,6 +121,7 @@ function redhen_lead_form_block_form($form, &$form_state, $lead_form) {
  */
 function redhen_lead_form_block_form_validate($form, &$form_state) {
   $contact = $form_state['redhen_contact'];
+  $lead = $form_state['redhen_lead'];
 
   // Only perform validations if the contact is new.
   if (isset($contact->is_new) && $contact->is_new) {
@@ -118,9 +130,12 @@ function redhen_lead_form_block_form_validate($form, &$form_state) {
       form_set_error('mail', t('The e-mail address %mail is not valid.', array('%mail' => $form_state['values']['mail'])));
     }
 
-    // Notify field widgets to validate their data.
+    // Notify contact widgets to validate their data.
     field_attach_form_validate('redhen_contact', $contact, $form, $form_state);
   }
+
+  // Notify lead widgets to validate their data.
+  field_attach_form_validate('redhen_lead', $lead, $form, $form_state);
 }
 
 
@@ -129,6 +144,7 @@ function redhen_lead_form_block_form_validate($form, &$form_state) {
  */
 function redhen_lead_form_block_form_submit($form, &$form_state) {
   $contact = $form_state['redhen_contact'];
+  $lead = $form_state['redhen_lead'];
 
   // Only perform submit handling if the contact is new.
   if (isset($contact->is_new) && $contact->is_new) {
@@ -144,12 +160,19 @@ function redhen_lead_form_block_form_submit($form, &$form_state) {
     $contact->first_name = $form_state['values']['first_name'];
     $contact->last_name = $form_state['values']['last_name'];
 
-    // Notify field widgets.
+    // Notify contact widgets.
     field_attach_submit('redhen_contact', $contact, $form, $form_state);
   }
 
+  // Notify lead widgets.
+  field_attach_submit('redhen_lead', $lead, $form, $form_state);
+
   // Save the contact.
   $contact = redhen_contact_save($contact);
+
+  // Set the contact on the lead and save it.
+  $lead->contact_id = entity_id('redhen_contact', $contact);
+  $lead = redhen_lead_save($lead);
 
   // Provide the CTA action based on the config settings.
   $form_state['redirect'] = redhen_lead_form_get_button_action($form_state['build_info']['args'][0]->settings);
