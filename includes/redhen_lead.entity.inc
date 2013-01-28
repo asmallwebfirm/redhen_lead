@@ -72,7 +72,7 @@ class RedhenLead extends Entity {
     $wrapper = entity_metadata_wrapper('redhen_lead', $this);
     $entity = $wrapper->contact->value();
     // Don't sanitize here as this function should produce unsanitized output.
-    return t('Lead !id on !label', array('!id' => $this->lead_id, '!label' => $entity->label()));
+    return $entity->label();
   }
 
   /**
