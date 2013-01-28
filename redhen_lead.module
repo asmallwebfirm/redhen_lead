@@ -118,3 +118,14 @@ function redhen_lead_load_contact_by_email($email) {
 
   return $emails[$email];
 }
+
+
+/**
+ * Implements hook_views_api().
+ */
+function redhen_lead_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'redhen_lead') . '/includes',
+  );
+}
