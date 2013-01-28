@@ -142,6 +142,16 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
     '#tree' => TRUE,
   );
 
+  // Submit button text.
+  $form['cta']['button_text'] = array(
+    '#type' => 'textfield',
+    '#length' => 50,
+    '#title' => t('CTA button text'),
+    '#required' => TRUE,
+    '#default_value' => isset($lead_form->settings['cta']['button_text']) ? $lead_form->settings['cta']['button_text'] : '',
+    '#description' => t('The text of the CTA form submit button.'),
+  );
+
   // CTA Action Type.
   $form['cta']['type'] = array(
     '#type' => 'radios',
