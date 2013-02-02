@@ -10,6 +10,14 @@
  * Generates the RedHen Lead Gen form editing form.
  */
 function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
+  $contact_options = _redhen_contact_types_build_options();
+  if (empty($contact_options)) {
+    drupal_set_message(t('You must !create_a_redhen_contact_type before you can create a lead gen form.', array(
+      '!create_a_redhen_contact_type' => l(t('Create a RedHen Contact Type'), 'admin/structure/redhen/contact_types'),
+    )), 'warning');
+    return;
+  }
+
   if ($op == 'clone') {
     $lead_form->label .= ' (cloned)';
     $lead_form->name = '';
@@ -109,20 +117,15 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
   );
 
   // RedHen contact type.
-  $options = _redhen_contact_types_build_options();
   $form['contact']['contact_type'] = array(
     '#type' => 'select',
     '#title' => t('Contact type'),
-    '#options' => $options,
+    '#options' => $contact_options,
     '#default_value' => isset($lead_form->settings['contact']['contact_type']) ? $lead_form->settings['contact']['contact_type'] : key($options),
     '#description' => t('Select the type of RedHen Contact (and its associated fields) to use for this lead gen form.'),
     '#required' => TRUE,
   );
-  if (empty($options)) {
-    drupal_set_message(t('You must !create_a_redhen_contact_type before you can create a lead gen form.', array(
-      '!create_a_redhen_contact_type' => l(t('Create a RedHen Contact Type'), '/admin/structure/redhen/contact_types'),
-    )), 'warning');
-  }
+
   // RedHen contact session handling.
   $form['contact']['session'] = array(
     '#type' => 'checkbox',
