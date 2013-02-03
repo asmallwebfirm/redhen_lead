@@ -12,8 +12,8 @@
 function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
   $contact_options = _redhen_contact_types_build_options();
   if (empty($contact_options)) {
-    drupal_set_message(t('You must !create_a_redhen_contact_type before you can create a lead gen form.', array(
-      '!create_a_redhen_contact_type' => l(t('Create a RedHen Contact Type'), 'admin/structure/redhen/contact_types'),
+    drupal_set_message(t('You must !create_a_redhen_contact_type before you can create a lead form.', array(
+      '!create_a_redhen_contact_type' => l(t('create a RedHen contact type'), 'admin/structure/redhen/contact_types'),
     )), 'warning');
     return;
   }
@@ -122,7 +122,7 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
     '#title' => t('Contact type'),
     '#options' => $contact_options,
     '#default_value' => isset($lead_form->settings['contact']['contact_type']) ? $lead_form->settings['contact']['contact_type'] : key($options),
-    '#description' => t('Select the type of RedHen Contact (and its associated fields) to use for this lead gen form.'),
+    '#description' => t('Select the type of RedHen Contact (and its associated fields) to use for this lead form.'),
     '#required' => TRUE,
   );
 
@@ -194,7 +194,7 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
       '#options' => $options,
       '#default_value' => isset($lead_form->settings['cta']['dynamic']['field']) ? $lead_form->settings['cta']['dynamic']['field'] : key($options),
       '#description' => '<p>' . t('After a RedHen Contact record is created, the user will be redirected to the specified file or link attached to the primary entity associated with the page on which the form is embedded.') . '</p>' .
-        '<p>' . t('For example, if this form is placed on all nodes of type "page" and "page" nodes have a hidden file download field called "field_pdf_download" attached to them, you could select "field_pdf_download" here and users would download the PDF after filling out this lead gen form. ') . '</p>' . 
+        '<p>' . t('For example, if this form is placed on all nodes of type "page" and "page" nodes have a hidden file download field called "field_pdf_download" attached to them, you could select "field_pdf_download" here and users would download the PDF after filling out this lead form. ') . '</p>' . 
         '<p>' . t('If this form happens to be embedded on a node type that does not have a "field_pdf_download" field attached, the form will not display.') . '</p>',
       '#states' => array(
         'visible' => array(
@@ -334,6 +334,8 @@ function redhen_lead_form_form_submit_delete(&$form, &$form_state) {
  * Prepares a list of RedHen Contact Types suitable for use in a select list.
  */
 function _redhen_contact_types_build_options() {
+  $types = array();
+
   foreach (redhen_contact_get_types() as $type => $contact_type) {
     $types[$type] = entity_label('redhen_contact', $contact_type);
   }
