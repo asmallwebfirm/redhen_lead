@@ -121,7 +121,7 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
     '#type' => 'select',
     '#title' => t('Contact type'),
     '#options' => $contact_options,
-    '#default_value' => isset($lead_form->settings['contact']['contact_type']) ? $lead_form->settings['contact']['contact_type'] : key($options),
+    '#default_value' => isset($lead_form->settings['contact']['contact_type']) ? $lead_form->settings['contact']['contact_type'] : key($contact_options),
     '#description' => t('Select the type of RedHen Contact (and its associated fields) to use for this lead form.'),
     '#required' => TRUE,
   );
@@ -219,7 +219,6 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
       '#attributes' => array(
         'style' => 'display:none;',
       ),
-      '#required' => TRUE,
     );
   }
 

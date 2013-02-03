@@ -8,3 +8,4 @@ dependencies[] = redhen_contact
 dependencies[] = entity
 
 files[] = includes/redhen_lead.entity.inc
+files[] = redhen_lead.test

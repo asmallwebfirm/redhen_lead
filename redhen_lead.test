@@ -1,0 +1,343 @@
+<?php
+
+/**
+ * @file
+ * Tests for the RedHen lead module.
+ */
+
+
+/**
+ * Contains useful helper functions/variables to be used by RedHen Lead tests.
+ */
+class RedHenLeadWebTestCase extends DrupalWebTestCase {
+  /**
+   * Keep track of all admin URLs.
+   */
+  protected $admin_urls = array(
+    'lead_form_add' => 'admin/structure/redhen/lead-forms/add',
+    'lead_form_list' => 'admin/structure/redhen/lead-forms',
+    'lead_form_configure_basic' => 'admin/structure/redhen/lead-forms/manage/basic',
+    'block_configure' => 'admin/structure/block',
+    'block_configure_basic' => 'admin/structure/block/manage/redhen_lead_form/basic/configure',
+  );
+
+  /**
+   * Keep track of form configuration data suitable for use in drupalPost().
+   */
+  protected $form_configs = array(
+    'basic' => array(
+      'label' => 'Basic',
+      'name' => 'basic',
+      'block_config[settings][title]' => 'Basic form',
+      'cta[button_text]' => 'Basic CTA',
+      'cta[static][url]' => 'node',
+      'cta[target]' => '_blank',
+    ),
+  );
+
+  /**
+   * Creates a RedHen contact type with optionally specified fields.
+   *
+   * @param $name
+   *   The name of the contact type to create.
+   *
+   * @param $fields
+   *   (Optional) An array of field definitions.
+   */
+  protected function createContactType($machine_name, $fields = array()) {
+    $contact_type = entity_get_controller('redhen_contact_type')->create(array(
+      'name' => $machine_name,
+      'label' => ucwords($machine_name),
+    ));
+
+    return redhen_contact_type_save($contact_type);
+  }
+}
+
+
+/**
+ * Tests configuration changes of the RedHen Lead module.
+ */
+class RedHenLeadConfigurationTestCase extends RedHenLeadWebTestCase {
+  /**
+   * Keep track of block configuration data suitable for use in drupalPost().
+   *
+   * Note each key corresponds to a private method, which performs tests for the
+   * configuration of the same name.
+   */
+  private $block_configs = array(
+    // @see RedHenLeadConfigurationTestCase::testPageAllButAdmin()
+    'testPageAllButAdmin' => array(
+      'block_config[regions][bartik]' => 'sidebar_second',
+      'block_config[visibility][path][visibility]' => BLOCK_VISIBILITY_NOTLISTED,
+      'block_config[visibility][path][pages]' => 'admin*',
+    ),
+    // @see RedHenLeadConfigurationTestCase::testPageOnlyNode()
+    'testPageOnlyNode' => array(
+      'block_config[regions][bartik]' => 'sidebar_second',
+      'block_config[visibility][path][visibility]' => BLOCK_VISIBILITY_LISTED,
+      'block_config[visibility][path][pages]' => 'node',
+    ),
+    // @see RedHenLeadConfigurationTestCase::testPagePHPOnlyFront()
+    'testPagePHPOnlyFront' => array(
+      'block_config[regions][bartik]' => 'sidebar_second',
+      'block_config[visibility][path][visibility]' => BLOCK_VISIBILITY_PHP,
+      'block_config[visibility][path][pages]' => '<?php return drupal_is_front_page(); ?>',
+    ),
+    // @see RedHenLeadConfigurationTestCase::testContentTypesPage()
+    'testContentTypesPage' => array(
+      'block_config[regions][bartik]' => 'sidebar_second',
+      'block_config[visibility][node_type][types][page]' => 'page',
+    ),
+    // @see RedHenLeadConfigurationTestCase::testRolesAnonymous()
+    'testRolesAnonymous' => array(
+      'block_config[regions][bartik]' => 'sidebar_second',
+      'block_config[visibility][role][roles][1]' => 1,
+    ),
+  );
+
+  public static function getInfo() {
+    return array(
+      'name' => 'RedHen Lead Configuration',
+      'description' => 'Tests RedHen lead configurations and config forms.',
+      'group' => 'RedHen',
+    );
+  }
+
+  function setUp() {
+    // Ensure required modules are enabled.
+    parent::setUp(array('entity', 'redhen', 'redhen_contact', 'redhen_lead', 'redhen_lead_form', 'php'));
+
+    // Create an admin user with all requisite permissions and log him in.
+    $this->admin_user = $this->drupalCreateUser(array(
+      'access administration pages',
+      'access content',
+      'administer blocks',
+      'use PHP for settings',
+      'administer redhen leads',
+      'manage redhen leads',
+      'access redhen leads',
+      'administer redhen lead forms',
+      'administer redhen_contact types',
+      'administer redhen contacts',
+      'manage redhen contacts',
+      'access redhen contacts',
+      'view own redhen contact',
+      'edit own redhen contact',
+    ));
+    $this->drupalLogin($this->admin_user);
+  }
+
+  function tearDown() {
+    parent::tearDown();
+  }
+
+  /**
+   * Tests basic config changes of the RedHen Lead (and Lead Form) modules.
+   */
+  public function testBasicConfiguration() {
+    // Link to "create a contact type" should appear when none are defined.
+    $this->drupalGet($this->admin_urls['lead_form_add']);
+    $this->assertText('You must create a RedHen contact type before you can create a lead form.', 'Error message displayed when no contact types are defined.');
+    
+    // There should be no other fields on the page.
+    $this->assertNoField('label', 'RedHen Lead Form configuration fields not present when no contact types are defined.');
+
+    // Create a contact type and ensure the message disappears.
+    $this->createContactType('generic');
+    $this->drupalGet($this->admin_urls['lead_form_add']);
+    $this->assertNoText('You must create a RedHen contact type before you can create a lead form.', 'Error message hidden when contact types are defined.');
+    $this->assertField('label', 'RedHen Lead Form configuration fields present when contact type is defined.');
+
+	  // Test that error appears if a file field does not exist on any entity.
+    $this->assertText('You must attach a file field or Link field to an entity to use this option.', 'Message displayed when no dynamic CTA field options are defined.');
+
+    // Test that basic lead form configuration form submission works.
+    $this->drupalPost(NULL, $this->form_configs['basic'], t('Save lead form'));
+    $this->assertTrue(strpos($this->url, $this->admin_urls['lead_form_list']) !== FALSE, 'Successfully redirected back to lead form list page after saving lead form.');
+    $this->assertText('The block configuration has been saved.', 'Block configuration saved message displayed after saving lead form.');
+
+    // There should be a link to configure the form on the block admin page.
+    $this->drupalGet($this->admin_urls['block_configure']);
+    $this->assertText('RedHen Lead Form: Basic', 'Link to configure lead form block displayed on block configuration page.');
+
+    // Going to configure the block using the path seen on administer block page
+    // should redirect to the RedHen Lead Form config page.
+    $this->drupalGet($this->admin_urls['block_configure_basic']);
+    $this->assertTrue(strpos($this->url, $this->admin_urls['lead_form_configure_basic']) !== FALSE, 'Successfully redirected back to lead form configuration page when clicking from block admin page.');
+
+    // Ensure values submitted on the form are stored and retrieved properly.
+    foreach ($this->form_configs['basic'] as $name => $value) {
+      $this->assertFieldByName($name, $value, format_string('Value %value saved and retrieved correctly on field %field on lead form configuration.', array('%value' => $value, '%field' => $name)));
+    }
+
+    // Deleting a lead form configuration should also remove the block, at least from the block configuration page.
+    $this->drupalPost(NULL, array(), t('Delete lead form'));
+    $this->drupalPost(NULL, array(), t('Confirm'));
+    $this->assertText('Deleted Redhen lead forms Basic.', 'Successfully deleted "Basic" RedHen lead form');
+    $this->drupalGet($this->admin_urls['block_configure']);
+    $this->assertNoText('RedHen Lead Form: Basic', 'Link to configure lead form block no longer displayed on block configuration page.');
+  }
+
+  /**
+   * Tests block configurations associated with a RedHen Lead Form.
+   */
+  public function testBlockConfiguration() {
+    // Create a contact type, navigate to lead form add page.
+    $this->createContactType('generic');
+    $this->drupalGet($this->admin_urls['lead_form_add']);
+
+    // Ensure all enabled block region/visibility settings are displayed.
+    $this->assertFieldByName('block_config[regions][bartik]', NULL, '"Region settings" displayed on lead form add page. ');
+    $this->assertFieldByName('block_config[visibility][path][pages]', NULL, '"By page" visibility settings displayed on lead form add page.');
+    $this->assertFieldByName('block_config[visibility][path][visibility]', BLOCK_VISIBILITY_PHP, 'PHP filter visibility settings displayed on lead form add page.');
+    $this->assertFieldByName('block_config[visibility][node_type][types][page]', NULL, '"By content type" visibility settings displayed on lead form add page.');
+    $this->assertFieldByName('block_config[visibility][role][roles][1]', NULL, '"By role" visibility settings displayed on lead form add page.');
+    $this->assertFieldByName('block_config[visibility][user][custom]', NULL, '"By user" visibility settings displayed on lead form add page.');
+
+    // Create a basic lead form.
+    $this->drupalPost(NULL, $this->form_configs['basic'], t('Save lead form'));
+
+    // Go through each defined block configuration.
+    foreach ($this->block_configs as $config_name => $config) {
+      // Save the specified configurations.
+      $this->drupalGet($this->admin_urls['lead_form_configure_basic']);
+      $edit = $this->block_configs[$config_name];
+      $this->drupalPost(NULL, $edit, t('Save lead form'));
+
+      // Ensure the configurations were saved and are retrieved properly.
+      foreach ($this->block_configs[$config_name] as $name => $value) {
+        $this->drupalGet($this->admin_urls['lead_form_configure_basic']);
+        $this->assertFieldByName($name, $value, format_string('Value %value saved and retrieved correctly on field %field for %test configuration on lead form configuration.', array('%value' => $value, '%field' => $name, '%test' => $config_name)));
+      }
+
+      // Perform placement tests.
+      $reset = $this->$config_name();
+
+      // Revert the configurations to defaults.
+      $this->drupalPost($this->admin_urls['lead_form_configure_basic'], $reset, t('Save lead form'));
+    }
+  }
+
+  /**
+   * Tests that the testPageAllButAdmin block configuration is respected.
+   *
+   * @return
+   *   An array of values keyed by field name to be used to revert the
+   *   configurations once testing is complete.
+   */
+  private function testPageAllButAdmin() {
+    // Going to a non-admin page, we should see the lead form.
+    $this->drupalGet('user/login');
+    $this->assertFieldByName('op', 'Basic CTA', 'Lead form found on non-admin page.');
+
+    // Going to an admin page, we shouldn't see the lead form.
+    $this->drupalGet($this->admin_urls['lead_form_list']);
+    $this->assertNoFieldByName('op', 'Basic CTA', 'Lead form not found on admin page.');
+
+    return array(
+      'block_config[regions][bartik]' => BLOCK_REGION_NONE,
+      'block_config[visibility][path][visibility]' => BLOCK_VISIBILITY_NOTLISTED,
+      'block_config[visibility][path][pages]' => '',
+    );
+  }
+
+  /**
+   * Tests that the testPageOnlyNode block configuration is respected.
+   *
+   * @return
+   *   An array of values keyed by field name to be used to revert the
+   *   configurations once testing is complete.
+   */
+  private function testPageOnlyNode() {
+    // Going to the node page, we should see the lead form.
+    $this->drupalGet('node');
+    $this->assertFieldByName('op', 'Basic CTA', 'Lead form found on node page.');
+
+    // Going to any other page, we shouldn't see the lead form.
+    $this->drupalGet('user/login');
+    $this->assertNoFieldByName('op', 'Basic CTA', 'Lead form not found on non-node page.'); 
+   
+    return array(
+      'block_config[regions][bartik]' => BLOCK_REGION_NONE,
+      'block_config[visibility][path][visibility]' => BLOCK_VISIBILITY_NOTLISTED,
+      'block_config[visibility][path][pages]' => '',
+    );
+  }
+
+  /**
+   * Tests that the testPageOnlyNode block configuration is respected.
+   *
+   * @return
+   *   An array of values keyed by field name to be used to revert the
+   *   configurations once testing is complete.
+   */
+  private function testPagePHPOnlyFront() {
+    // Going to the front page, we should see the lead form.
+    $this->drupalGet('<front>');
+    $this->assertFieldByName('op', 'Basic CTA', 'Lead form found on front page.');
+
+    // Going to any other page, we shouldn't see the lead form.
+    $this->drupalGet('user/login');
+    $this->assertNoFieldByName('op', 'Basic CTA', 'Lead form not found on non-front page.'); 
+
+    return array(
+      'block_config[regions][bartik]' => BLOCK_REGION_NONE,
+      'block_config[visibility][path][visibility]' => BLOCK_VISIBILITY_NOTLISTED,
+      'block_config[visibility][path][pages]' => '',
+    );
+  }
+
+  /**
+   * Tests that the testContentTypesPage block configuration is respected.
+   *
+   * @return
+   *   An array of values keyed by field name to be used to revert the
+   *   configurations once testing is complete.
+   */
+  private function testContentTypesPage() {
+    // Create a node of type "page."
+    $node = $this->drupalCreateNode();
+
+    // Going to the node page, we should see the lead form.
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertFieldByName('op', 'Basic CTA', 'Lead form found on node of type page.');
+
+    // Going to any other page, we shouldn't see the lead form.
+    $this->drupalGet('<front>');
+    $this->assertNoFieldByName('op', 'Basic CTA', 'Lead form not found on non-page node page.'); 
+    
+    return array(
+      'block_config[regions][bartik]' => BLOCK_REGION_NONE,
+      'block_config[visibility][node_type][types][page]' => FALSE,
+    );
+  }
+
+  /**
+   * Tests that the testRolesAnonymous block configuration is respected.
+   *
+   * @return
+   *   An array of values keyed by field name to be used to revert the
+   *   configurations once testing is complete.
+   */
+  private function testRolesAnonymous() {
+    // Log the admin user out.
+    $this->drupalLogout();
+
+    // Going to a page unauthenticated, we should see the lead form.
+    $this->drupalGet('<front>');
+    $this->assertFieldByName('op', 'Basic CTA', 'Lead form found as anonymous user.');
+
+    // Log the admin user back in.
+    $this->drupalLogin($this->admin_user);
+
+    // Going to the same page authenticated, we shouldn't see the lead form.
+    $this->drupalGet('<front>');
+    $this->assertNoFieldByName('op', 'Basic CTA', 'Lead form not found as authenticated user.'); 
+    
+    return array(
+      'block_config[regions][bartik]' => BLOCK_REGION_NONE,
+      'block_config[visibility][role][roles][1]' => FALSE,
+    );
+  }
+}
