@@ -275,9 +275,7 @@ function redhen_lead_form_form_validate($form, &$form_state) {
   $values['settings']['cta'] = $values['cta'];
 
   // Add block config settings and prepare for standard block processing.
-  module_load_include('inc', 'block', 'block.admin');
   $values['settings']['block_config'] = $values['block_config'];
-  _redhen_lead_form_set_block_config_form_state($form_state, $values['block_config']);
   $values['delta'] = $values['name'];
 }
 
