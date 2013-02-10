@@ -240,11 +240,13 @@ function redhen_lead_form_get_button_action($settings) {
       // Handling for files.
       case 'file':
         $file = $wrapper->$field->value();
+        $file = isset($file[0]['uri']) ? $file[0] : $file;
         $url = file_create_url($file['uri']);
         break;
 
       case 'link_field':
         $link = $wrapper->$field->value();
+        $link = isset($link[0]['url']) ? $link[0] : $link;
         $url = $link['url'];
         break;
     }
