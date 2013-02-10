@@ -39,7 +39,15 @@ class RedhenLeadFormController extends EntityAPIControllerExportable {
    * Save Redhen Lead form.
    */
   public function save($entity, DatabaseTransaction $transaction = NULL) {
+    $is_new = isset($entity->is_new) && $entity->is_new ? TRUE : FALSE;
+
     parent::save($entity, $transaction);
+
+    // If this is a new lead form block, rehash blocks. This is required to
+    // ensure the block admin form hacks below are aware of the new block.
+    if ($is_new) {
+      block_flush_caches();
+    }
 
     // Load necessary incs.
     module_load_include('inc', 'redhen_lead_form', 'includes/redhen_lead_form.forms');
@@ -69,9 +77,6 @@ class RedhenLeadFormController extends EntityAPIControllerExportable {
     foreach ($submit_handlers as $handler) {
       $handler($fake_form, $fake_form_state);
     }
-
-    // We'll need to rehash blocks. There's no better indirect way to call this.
-    block_flush_caches();
   }
 
   /**
