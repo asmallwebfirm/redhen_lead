@@ -27,6 +27,13 @@ function redhen_lead_form_get_block($delta = '') {
         if (!isset($wrapper->$field)) {
           return $block;
         }
+        // If the field exists but it's empty, bail out.
+        else {
+          $field_value = $wrapper->$field->value();
+          if ((isset($field_value[0]) && empty($field_value[0])) || empty($field_value)) {
+            return $block;
+          }
+        }
       }
       // If the primary menu object isn't an entity, bail out.
       else {
