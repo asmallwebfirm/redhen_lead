@@ -62,7 +62,15 @@ function redhen_lead_menu() {
   $items['admin/structure/redhen/leads'] = array(
     'title' => 'Leads',
     'description' => 'Manage RedHen leads',
-    'page callback' => 'redhen_lead_admin_page',
+    'page callback' => 'redhen_lead_manage_page',
+    'file' => 'includes/redhen_lead.pages.inc',
+    'access arguments' => array('administer redhen leads'),
+  );
+  $items['admin/config/redhen/leads'] = array(
+    'title' => 'RedHen lead settings',
+    'description' => 'Configure the RedHen Lead module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('redhen_lead_admin_form'),
     'file' => 'includes/redhen_lead.pages.inc',
     'access arguments' => array('administer redhen leads'),
   );

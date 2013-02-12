@@ -155,8 +155,17 @@ function redhen_lead_form_block_form_submit($form, &$form_state) {
 
   // Only perform submit handling if the contact is new.
   if (isset($contact->is_new) && $contact->is_new) {
-    // Try loading the contact based on the provided e-mail address.
-    if (!$contact = redhen_lead_load_contact_by_email($form_state['values']['mail'])) {
+    // If configured, try loading the contact based on the e-mail address.
+    if (variable_get('redhen_lead_form_unique_email', TRUE)) {
+      $existing_contact = redhen_lead_load_contact_by_email($form_state['values']['mail']);
+    }
+
+    // If we loaded an existing contact, use it.
+    if (isset($existing_contact) && !empty($existing_contact)) {
+      $contact = $existing_contact;
+    }
+    // Otherwise, load the contact from this form submission and set the e-mail.
+    else {
       $contact = &$form_state['redhen_contact'];
 
       // Set the contact's e-mail.

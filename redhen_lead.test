@@ -706,6 +706,28 @@ class RedHenLeadFunctionalityTestCase extends RedHenLeadWebTestCase {
     $this->assertTrue(empty($lead->entity_id), t('Lead entity ID properly ignored when submitted from non-entity.'));
     $this->assertTrue($lead_wrapper->lead_field->value() == $this->form_data['basic_lead']['lead_field[und][0][value]'], t('Lead field value successfully saved to Lead entity.'));
 
+    // By default, submitting duplicate data will not create another contact.
+    $this->drupalGet('node');
+    $this->drupalPost(NULL, $this->form_data['basic_lead'], 'Static CTA');
+    $contact_q = db_query('SELECT * FROM {redhen_contact}');
+    $rows = $contact_q->rowCount();
+    $this->assertTrue($rows == 1, t('Duplicate contact info for lead form submission did not create a new Contact.'));
+    $lead_q = db_query('SELECT * FROM {redhen_lead}');
+    $rows = $lead_q->rowCount();
+    $this->assertTrue($rows == 2, t('Lead form submission created a Lead record.'));
+
+    // Configuring it the other way should yield the opposite effect.
+    variable_set('redhen_lead_form_unique_email', FALSE);
+    $this->drupalGet('node');
+    $this->drupalPost(NULL, $this->form_data['basic_lead'], 'Static CTA');
+    $contact_q = db_query('SELECT * FROM {redhen_contact}');
+    $rows = $contact_q->rowCount();
+    $this->assertTrue($rows == 2, t('Duplicate contact info for lead form submission created a new Contact when configured to do so.'));
+    $lead_q = db_query('SELECT * FROM {redhen_lead}');
+    $rows = $lead_q->rowCount();
+    $this->assertTrue($rows == 3, t('Lead form submission created a Lead record.'));
+    variable_del('redhen_lead_form_unique_email');
+
     // Submit a dynamic form.
     $this->drupalGet('node/1');
     $this->drupalPost(NULL, $this->form_data['alternate_lead'], 'Dynamic CTA');
@@ -713,17 +735,17 @@ class RedHenLeadFunctionalityTestCase extends RedHenLeadWebTestCase {
     // Dynamic form submission successfully creates Lead and Contact entries.
     $lead_q = db_query('SELECT * FROM {redhen_lead}');
     $rows = $lead_q->rowCount();
-    $this->assertTrue($rows == 2, t('Lead form submission created a Lead record.'));
+    $this->assertTrue($rows == 4, t('Lead form submission created a Lead record.'));
     $contact_q = db_query('SELECT * FROM {redhen_contact}');
     $rows = $contact_q->rowCount();
-    $this->assertTrue($rows == 2, t('Lead form submission created a Contact.'));
+    $this->assertTrue($rows == 3, t('Lead form submission created a Contact.'));
 
     // The correct data is stored on the Lead and Contact entities.
     $lead = $lead_q->fetchAll();
-    $lead = $lead[1];
+    $lead = $lead[3];
     $lead_wrapper = entity_metadata_wrapper('redhen_lead', $lead->lead_id);
     $contact = $contact_q->fetchAll();
-    $contact = $contact[1];
+    $contact = $contact[2];
     $contact_wrapper = entity_metadata_wrapper('redhen_contact', $contact->contact_id);
     $this->assertTrue($contact->type == 'generic', t('Contact of the right type was created.'));
     $this->assertTrue($contact->first_name == $this->form_data['alternate_lead']['first_name'], t('Contact first name passed successfully.'));

@@ -61,3 +61,17 @@ function redhen_lead_form_schema() {
 
   return $schema;
 }
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function redhen_lead_form_uninstall() {
+  $vars = array(
+    'redhen_lead_form_unique_email',
+  );
+
+  foreach ($vars as $var) {
+    variable_delete_($var);
+  }
+}

@@ -105,3 +105,15 @@ function redhen_lead_form_block_info() {
 function redhen_lead_form_block_view($delta = '') {
   return redhen_lead_form_get_block($delta); 
 }
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function redhen_lead_form_form_redhen_lead_admin_form_alter(&$form, &$form_state, $form_id) {
+  // Only perform the form alterations if the user has access.
+  if (user_access('administer redhen lead forms')) {
+    require_once(dirname(__FILE__) . '/includes/redhen_lead_form.pages.inc');
+    _redhen_lead_form_form_redhen_lead_admin_form_alter($form, $form_state, $form_id);
+  }
+}
