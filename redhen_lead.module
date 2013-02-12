@@ -105,7 +105,7 @@ function redhen_lead_load_contact_by_email($email) {
   $emails = &drupal_static(__FUNCTION__);
 
   if (!isset($emails[$email])) {
-    $result = db_query('SELECT entity_id FROM field_data_redhen_contact_email WHERE redhen_contact_email_value = :email', array(':email' => $email));
+    $result = db_query('SELECT entity_id FROM {field_data_redhen_contact_email} WHERE redhen_contact_email_value = :email', array(':email' => $email));
     $entity_id = $result->fetchAllKeyed(0, 0);
 
     if (!empty($entity_id)) {
