@@ -62,22 +62,22 @@ function redhen_lead_create(array $values = array()) {
 /**
  * Save a RedHen lead.
  */
-function redhen_lead_save($lead_form) {
-  entity_save('redhen_lead_form', $lead_form);
+function redhen_lead_save($lead) {
+  entity_save('redhen_lead', $lead);
 }
 
 
 /**
  * Delete a RedHen lead.
  */
-function redhen_lead_delete($lead_form) {
-  entity_delete('redhen_lead_form', entity_id('redhen_lead_form' ,$lead_form));
+function redhen_lead_delete($lead) {
+  entity_delete('redhen_lead', entity_id('redhen_lead', $lead));
 }
 
 
 /**
  * Delete multiple RedHen leads.
  */
-function redhen_lead_delete_multiple($lead_forms) {
-  entity_delete_multiple('redhen_lead_form', $lead_forms);
+function redhen_lead_delete_multiple($leads) {
+  entity_delete_multiple('redhen_lead', $leads);
 }
