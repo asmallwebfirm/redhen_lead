@@ -104,10 +104,10 @@ function redhen_lead_permission() {
  * Implements hook_redhen_contact_delete().
  */
 function redhen_lead_redhen_contact_delete($contact) {
-  // Retreive an array of lead IDs associated with this contact/
+  // Retreive an array of lead IDs associated with this contact.
   $query = new EntityFieldQuery();
   $query->entityCondition('entity_type', 'redhen_lead');
-  $query->entityCondition('contact_id', entity_id('redhen_contact', $contact));
+  $query->propertyCondition('contact_id', entity_id('redhen_contact', $contact));
   $result = $query->execute();
 
   redhen_lead_delete_multiple(array_keys($result['redhen_lead']));
