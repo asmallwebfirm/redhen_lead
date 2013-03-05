@@ -41,7 +41,7 @@ function redhen_lead_form_get_block($delta = '') {
       }
     }
 
-    $block['subject'] = $config->settings['block_config']['settings']['title'];
+    $block['subject'] = check_plain($config->settings['block_config']['settings']['title']);
     $block['content'] = drupal_get_form('redhen_lead_form_block_form', $config);
 
   }
@@ -114,7 +114,7 @@ function redhen_lead_form_block_form($form, &$form_state, $lead_form) {
   $form['actions'] = array(
     'submit' => array(
       '#type' => 'submit',
-      '#value' => $lead_form->settings['cta']['button_text'],
+      '#value' => check_plain($lead_form->settings['cta']['button_text']),
     ),
     '#weight' => 10,
   );
