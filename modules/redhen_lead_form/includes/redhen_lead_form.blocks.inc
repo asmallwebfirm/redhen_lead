@@ -198,6 +198,13 @@ function redhen_lead_form_block_form_submit($form, &$form_state) {
   if ($configs->settings['contact']['session']) {
     $_SESSION['redhen_lead_form']['contact'][$configs->settings['contact']['contact_type']] = serialize($contact);
   }
+
+  // If configured, display a success message.
+  if (isset($configs->settings['cta']['message']['value']) && !empty($configs->settings['cta']['message']['value'])) {
+    $format = $configs->settings['cta']['message']['format'];
+    $filtered = check_markup($configs->settings['cta']['message']['value'], $format);
+    drupal_set_message($filtered);
+  }
 }
 
 

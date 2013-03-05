@@ -235,6 +235,15 @@ function redhen_lead_form_form($form, &$form_state, $lead_form, $op = 'edit') {
     '#required' => TRUE,
   );
 
+  // CTA target.
+  $form['cta']['message'] = array(
+    '#type' => 'text_format',
+    '#title' => t('Success message'),
+    '#default_value' => isset($lead_form->settings['cta']['message']['value']) ? $lead_form->settings['cta']['message']['value'] : '',
+    '#format' => isset($lead_form->settings['cta']['message']['format']) ? $lead_form->settings['cta']['message']['format'] : NULL,
+    '#description' => t('The message displayed to the user after successfully filling out the form.'),
+  );
+
   // This will override the default block form actions with our own.
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(

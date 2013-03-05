@@ -526,7 +526,8 @@ class RedHenLeadFunctionalityTestCase extends RedHenLeadWebTestCase {
           "type" : "static",
           "static" : { "url" : "user/register" },
           "dynamic" : { "field" : "" },
-          "target" : "_blank"
+          "target" : "_blank",
+          "message" : { "value" : "This is the success message!", "format" : "plain_text" }
         },
         "block_config" : {
           "regions" : { "seven" : -1, "bartik" : "sidebar_second" },
@@ -646,6 +647,7 @@ class RedHenLeadFunctionalityTestCase extends RedHenLeadWebTestCase {
     // Sucessful submission with a static action redirects to the static path.
     $this->drupalPost(NULL, $this->form_data['basic_lead'], 'Static CTA');
     $this->assertTrue(strpos($this->url, 'user/register') !== FALSE, t('Static form successfully redirected to static path.'));
+    $this->assertText('This is the success message', t('Success message displayed properly.'));
 
     // Basic tests re-run for the dynamic form.
     $this->drupalGet('node/1');
