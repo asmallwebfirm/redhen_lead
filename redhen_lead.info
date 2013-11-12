@@ -1,6 +1,6 @@
 name = Redhen Lead
 description = Defines the base Lead entity and features.
-package = Redhen
+package = RedHen
 core = "7.x"
 
 dependencies[] = redhen (>=7.x-1.6)
