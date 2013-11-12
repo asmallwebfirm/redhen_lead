@@ -136,9 +136,29 @@ function redhen_lead_form_block_form_validate($form, &$form_state) {
     if (!valid_email_address($form_state['values']['mail'])) {
       form_set_error('mail', t('The e-mail address %mail is not valid.', array('%mail' => $form_state['values']['mail'])));
     }
+    else {
+      // Try loading the contact based on the provided e-mail address.
+      $exists = FALSE;
+      if (variable_get('redhen_lead_form_unique_email', TRUE)) {
+        $exists = redhen_lead_load_contact_by_email($form_state['values']['mail']);
+      }
+      $contact = $exists ? $exists : $contact;
 
-    // Notify contact widgets to validate their data.
-    field_attach_form_validate('redhen_contact', $contact, $form, $form_state);
+      // Set the contact's e-mail.
+      if (!$contact->hasEmail($form_state['values']['mail'])) {
+        $contact->setEmail($form_state['values']['mail']);
+      }
+
+      // Whether or not the contact is new, alter the name to what is provided.
+      $contact->first_name = $form_state['values']['first_name'];
+      $contact->last_name = $form_state['values']['last_name'];
+
+      // Notify contact widgets to validate their data.
+      field_attach_form_validate('redhen_contact', $contact, $form, $form_state);
+
+      // Save the contact to the form state.
+      $form_state['redhen_contact'] = $contact;
+    }
   }
 
   // Notify lead widgets to validate their data.
@@ -155,27 +175,6 @@ function redhen_lead_form_block_form_submit($form, &$form_state) {
 
   // Only perform submit handling if the contact is new.
   if (isset($contact->is_new) && $contact->is_new) {
-    // If configured, try loading the contact based on the e-mail address.
-    if (variable_get('redhen_lead_form_unique_email', TRUE)) {
-      $existing_contact = redhen_lead_load_contact_by_email($form_state['values']['mail']);
-    }
-
-    // If we loaded an existing contact, use it.
-    if (isset($existing_contact) && !empty($existing_contact)) {
-      $contact = $existing_contact;
-    }
-    // Otherwise, load the contact from this form submission and set the e-mail.
-    else {
-      $contact = &$form_state['redhen_contact'];
-
-      // Set the contact's e-mail.
-      $contact->setEmail($form_state['values']['mail']);
-    }
-
-    // Whether or not the contact is new, alter the name to what is expected.
-    $contact->first_name = $form_state['values']['first_name'];
-    $contact->last_name = $form_state['values']['last_name'];
-
     // Notify contact widgets.
     field_attach_submit('redhen_contact', $contact, $form, $form_state);
   }

@@ -3,7 +3,7 @@ description = Defines the base Lead entity and features.
 package = Redhen
 core = "7.x"
 
-dependencies[] = redhen
+dependencies[] = redhen (>=7.x-1.6)
 dependencies[] = redhen_contact
 dependencies[] = entity
 
