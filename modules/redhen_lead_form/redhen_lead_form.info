@@ -7,5 +7,6 @@ dependencies[] = redhen
 dependencies[] = redhen_contact
 dependencies[] = redhen_lead
 dependencies[] = entity
+dependencies[] = block
 
 files[] = includes/redhen_lead_form.entity.inc
