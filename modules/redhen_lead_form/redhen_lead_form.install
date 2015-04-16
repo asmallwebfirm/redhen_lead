@@ -72,6 +72,6 @@ function redhen_lead_form_uninstall() {
   );
 
   foreach ($vars as $var) {
-    variable_delete_($var);
+    variable_del($var);
   }
 }
